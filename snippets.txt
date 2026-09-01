@@ -1,0 +1,17 @@
+posts: list[dict] = [
+    {
+        "id":1,
+        "author": "aziz kchaw",
+        "title": "aziz is bachoula",
+        "content": "this framework is bakchoula",
+        "date_posted" : "July 21,2004",
+    },
+    {
+        "id":2,
+        "author": "ali kchaw",
+        "title": "ali is bachoula",
+        "content": "this framework is bakchoukaa",
+        "date_posted" : "July 24,2004",
+    },    
+
+]
