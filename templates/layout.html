@@ -86,13 +86,17 @@
                                         data-bs-toggle="modal"
                                         data-bs-target="#createPostModal">New Post</button>
                                 <a class="btn btn-light mb-2 mb-md-0 me-md-3"
-                                   href="#"
+                                              href="{{ url_for('account') }}"
                                    id="accountBtn">Account</a>
                             </div>
                             <!-- Shown when logged out -->
                             <div id="loggedOutNav">
-                                          <a class="btn btn-outline-light mb-2 mb-md-0 me-md-2" href="#">Login</a>
-                                          <a class="btn btn-light mb-2 mb-md-0 me-md-3" href="#">Register</a>
+                                          <a class="btn btn-outline-light mb-2 mb-md-0 me-md-2" href="{{ url_for('login') }}">Login</a>
+                                      <button class="btn btn-outline-light mb-2 mb-md-0 me-md-2"
+                                          type="button"
+                                          data-bs-toggle="modal"
+                                          data-bs-target="#createPostModal">New Post</button>
+                                          <a class="btn btn-light mb-2 mb-md-0 me-md-3" href="{{ url_for('register') }}">Register</a>
                             </div>
                             <div class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle"
@@ -164,6 +168,8 @@
                     </div>
                     <form id="createPostForm">
                         <div class="modal-body">
+                            <!-- Temporary owner until authentication is implemented. -->
+                            <input type="hidden" name="user_id" value="2">
                             <div class="mb-3">
                                 <label for="title" class="form-label">Title</label>
                                 <input type="text" class="form-control" id="title" name="title" required>
@@ -183,6 +189,7 @@
                 </div>
             </div>
         </div>
+        
         <!-- Success Modal -->
         <div class="modal fade"
              id="successModal"
@@ -297,6 +304,7 @@
 
             const createForm = document.getElementById("createPostForm");
 
+            if (createForm) {
             createForm.addEventListener("submit", async (event) => {
             // Stop default form submission - we'll handle it with JavaScript
             event.preventDefault();
@@ -364,6 +372,7 @@
                 showModal("errorModal");
             }
             });
+            }
         </script>
         {% block scripts %}
         {% endblock scripts %}

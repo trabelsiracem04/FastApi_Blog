@@ -1,17 +1,40 @@
 {% extends "layout.html" %}
 {% block content %}
+  <section id="profilePictureSection" class="content-section py-3 px-4 mb-4 d-none">
+    <h2 class="h5 mb-3">Update Profile Picture</h2>
+    <div class="d-flex flex-wrap gap-3 align-items-start">
+      <img id="profilePicturePreview"
+         class="rounded-circle object-fit-cover"
+         src="/static/profile_pics/default.jpg"
+         alt="Profile picture preview"
+         width="80"
+         height="80">
+      <div>
+        <input type="file"
+             class="form-control file-input-sm mb-2"
+             id="profilePictureInput"
+             accept="image/jpeg,image/png,image/gif,image/webp">
+        <button type="button" class="btn btn-primary" id="uploadProfilePictureBtn" disabled>
+          Upload Picture
+        </button>
+        <div class="form-text">Maximum file size: 5MB.</div>
+      </div>
+    </div>
+  </section>
     <div id="postsContainer">
         {% for post in posts %}
             <article class="content-section py-3 px-4 mb-4">
                 <div class="d-flex align-items-start gap-4">
-                    <div class="rounded-circle article-img flex-shrink-0 bg-secondary"
-                      aria-hidden="true"
+                    <img class="rounded-circle article-img flex-shrink-0"
+                         src="{{ post.author.image_path }}"
+                         alt="{{ post.author.username }}'s profile picture"
                          width="64"
-                      height="64"></div>
+                         height="64"
+                         loading="lazy">
                     <div class="flex-grow-1">
                         <div class="article-metadata mb-2">
                              <a class="me-2" href="{{ url_for('user_posts', user_id=post.author.id) }}">{{ post.author.username }}</a>
-                             <small class="text-body-secondary">{{ post.date_posted }}</small>
+                             <small class="text-body-secondary">{{ post.date_posted.strftime("%B %d, %Y") }}</small>
                         </div>
                         <h2>
                              <a class="article-title" href="{{ url_for('post_page', post_id=post.id) }}">{{ post.title }}</a>
@@ -22,12 +45,110 @@
             </article>
         {% endfor %}
     </div>
+        <div class="text-center mb-4">
+          <button type="button"
+              id="loadMoreBtn"
+              class="btn btn-primary{% if not has_more %} d-none{% endif %}">
+            Load more posts
+          </button>
+        </div>
 {% endblock content %}
 
 
 {% block scripts %}
     <script type="module">
-  import { escapeHtml, formatDate } from '/static/js/utils.js';
+  import { getCurrentUser, getToken, clearUserCache } from '/static/js/auth.js';
+  import { escapeHtml, formatDate, getErrorMessage, showModal } from '/static/js/utils.js';
+
+  const profilePictureSection = document.getElementById('profilePictureSection');
+  const profilePictureInput = document.getElementById('profilePictureInput');
+  const profilePicturePreview = document.getElementById('profilePicturePreview');
+  const uploadProfilePictureBtn = document.getElementById('uploadProfilePictureBtn');
+
+  async function setupProfilePictureUpload() {
+    const user = await getCurrentUser();
+    if (!user) {
+      return;
+    }
+
+    profilePictureSection.classList.remove('d-none');
+    profilePicturePreview.src = user.image_path;
+
+    profilePictureInput.addEventListener('change', () => {
+      const file = profilePictureInput.files[0];
+      const isValidImage = file && file.type.startsWith('image/');
+      const isValidSize = file && file.size <= 5 * 1024 * 1024;
+
+      uploadProfilePictureBtn.disabled = !(isValidImage && isValidSize);
+      if (!file) {
+        profilePicturePreview.src = user.image_path;
+        return;
+      }
+
+      if (!isValidImage || !isValidSize) {
+        profilePicturePreview.src = user.image_path;
+        document.getElementById('errorMessage').textContent =
+          !isValidImage ? 'Please select an image file.' : 'The image must be 5MB or smaller.';
+        showModal('errorModal');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        profilePicturePreview.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    uploadProfilePictureBtn.addEventListener('click', async () => {
+      const file = profilePictureInput.files[0];
+      const token = getToken();
+      if (!file || !token) {
+        window.location.href = token ? '/' : '/login';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+      uploadProfilePictureBtn.disabled = true;
+      uploadProfilePictureBtn.textContent = 'Uploading...';
+
+      try {
+        const response = await fetch(`/api/users/${user.id}/picture`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
+
+        if (response.status === 401) {
+          window.location.href = '/login';
+          return;
+        }
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(getErrorMessage(error));
+        }
+
+        const updatedUser = await response.json();
+        clearUserCache();
+        profilePicturePreview.src = updatedUser.image_path;
+        profilePictureInput.value = '';
+        document.getElementById('successMessage').textContent =
+          'Profile picture updated successfully!';
+        showModal('successModal');
+      } catch (error) {
+        document.getElementById('errorMessage').textContent =
+          error.message || 'Network error. Please try again.';
+        showModal('errorModal');
+      } finally {
+        uploadProfilePictureBtn.disabled = !profilePictureInput.files.length;
+        uploadProfilePictureBtn.textContent = 'Upload Picture';
+      }
+    });
+  }
+
+  setupProfilePictureUpload();
 
   // Pagination state - initialized from server-rendered values
   let currentOffset = {{ limit }};  // Start after server-rendered posts
@@ -98,7 +219,7 @@
       // Re-enable button and reset text only if no error occurred
       if (!errorOccurred && hasMore) {
         loadMoreBtn.disabled = false;
-        loadMoreBtn.textContent = 'Load More Posts';
+        loadMoreBtn.textContent = 'Load more posts';
       }
     }
   }

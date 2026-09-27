@@ -9,11 +9,13 @@
             <div class="flex-grow-1">
                 <div class="article-metadata mb-2">
                           <a class="me-2" href="{{ url_for('user_posts', user_id=post.author.id) }}">{{ post.author.username }}</a>
-                          <small class="text-body-secondary">{{ post.date_posted }}</small>
+                          <small class="text-body-secondary">{{ post.date_posted.strftime("%B %d, %Y") }}</small>
                 </div>
                 <h2 class="article-title">{{ post.title }}</h2>
                 <p class="article-content">{{ post.content }}</p>
-                <div id="postActions" class="post-actions mt-3 pt-3 border-top d-none">
+                 <div id="postActions"
+                     class="post-actions mt-3 pt-3 border-top d-none"
+                     data-owner-id="{{ post.user_id }}">
                     <button type="button"
                             class="btn btn-outline-secondary me-1"
                             data-bs-toggle="modal"
@@ -106,6 +108,17 @@
     import { getErrorMessage, showModal, hideModal } from '/static/js/utils.js';
 
     const postId = {{ post.id }};
+    const postActions = document.getElementById('postActions');
+
+    async function showOwnerActions() {
+        const user = await getCurrentUser();
+        if (user && String(user.id) === postActions.dataset.ownerId) {
+            postActions.classList.remove('d-none');
+        }
+    }
+
+    showOwnerActions();
+
     // Edit Post Form Handler
     const editForm = document.getElementById('editPostForm');
     editForm.addEventListener('submit', async (event) => {

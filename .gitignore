@@ -1,1 +1,47 @@
+# Local Python environments
 .venv/
+venv/
+env/
+ENV/
+
+# Environment and local secrets
+.env
+.env.*
+!.env.example
+
+# Python generated files
+__pycache__/
+*.py[cod]
+*$py.class
+build/
+dist/
+*.egg-info/
+
+# Test, type-checking, and coverage output
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Runtime logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# Local application databases
+*.db
+*.sqlite
+*.sqlite3
+
+# User-uploaded media
+media/profile_pics/*
+!media/profile_pics/.gitkeep
+
+# IDE and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
