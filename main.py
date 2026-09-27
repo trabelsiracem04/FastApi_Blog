@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select,func
 from sqlalchemy.orm import selectinload
 import models
-from database import get_db, engine, 
+from database import get_db, engine
 
 from contextlib import asynccontextmanager
 
